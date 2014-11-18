@@ -102,6 +102,10 @@ let rec ser_expr_of_typ typ =
     raise_errorf ~loc:ptyp_loc "%s cannot be derived for %s"
                  deriver (Ppx_deriving.string_of_core_type typ)
 
+let attr_no_warning_39 : attribute =
+  mknoloc "ocaml.warning",
+  PStr [Str.mk (Pstr_eval (Exp.constant (Const_string ("-39",None)), []))]
+
 (* http://desuchan.net/desu/src/1284751839295.jpg *)
 let rec desu_fold ~path f typs =
   typs |>
@@ -249,7 +253,8 @@ let ser_str_of_type ~options ~path ({ ptype_loc = loc } as type_decl) =
       raise_errorf ~loc "%s cannot be derived for open types" deriver
   in
   let polymorphize = Ppx_deriving.poly_fun_of_type_decl type_decl in
-  [Vb.mk (pvar (Ppx_deriving.mangle_type_decl (`Suffix "to_yojson") type_decl))
+  [Vb.mk ~attrs:[attr_no_warning_39]
+         (pvar (Ppx_deriving.mangle_type_decl (`Suffix "to_yojson") type_decl))
                (polymorphize [%expr ([%e serializer] : _ -> Yojson.Safe.json)])]
 
 let desu_str_of_type ~options ~path ({ ptype_loc = loc } as type_decl) =
@@ -305,7 +310,8 @@ let desu_str_of_type ~options ~path ({ ptype_loc = loc } as type_decl) =
       raise_errorf ~loc "%s cannot be derived for open types" deriver
   in
   let polymorphize = Ppx_deriving.poly_fun_of_type_decl type_decl in
-  [Vb.mk (pvar (Ppx_deriving.mangle_type_decl (`Suffix "of_yojson") type_decl))
+  [Vb.mk ~attrs:[attr_no_warning_39]
+          (pvar (Ppx_deriving.mangle_type_decl (`Suffix "of_yojson") type_decl))
                (polymorphize [%expr ([%e wrap_runtime desurializer] : Yojson.Safe.json -> _)])]
 
 let error_or typ = [%type: [ `Ok of [%t typ] | `Error of string ]]
